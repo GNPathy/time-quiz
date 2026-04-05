@@ -334,7 +334,7 @@
         </div>
         <div style="color: var(--text-dim); font-size: 0.85rem;">
             Jump To: 
-            <a href="../Geography/index.html" style="color: var(--primary); text-decoration: none; font-weight: bold; margin-left: 5px;">🌍 GeoVerse Explorer</a>
+            <a href="https://gnpathy.github.io/geography-quiz/" style="color: var(--primary); text-decoration: none; font-weight: bold; margin-left: 5px;">🌍 GeoVerse Explorer</a>
             <span style="color: var(--border); margin: 0 5px;">|</span>
             <span style="color: #64748b; font-style: italic;">🌌 SciVerse Explorer*</span>
             <span style="color: var(--border); margin: 0 5px;">|</span>
@@ -513,41 +513,101 @@
         }
     }
 
-    // MODE: Visual History
-    async function startVisuals() {
-        const diff = document.getElementById('difficulty-select').value;
-        prepareGameScreen("Loading historical archives...");
+    // MODE: Visual History — DYNAMIC (Wikipedia Pageimages API)
+    // Large pool of historical subjects — just names, images fetched live each round
+    const VISUAL_POOL = [
+        // Famous People (portraits)
+        { a: "Abraham Lincoln",       type: "portrait",  prompt: "Who is this historical figure?" },
+        { a: "Mahatma Gandhi",         type: "portrait",  prompt: "Who is this historical figure?" },
+        { a: "Joan of Arc",            type: "portrait",  prompt: "Who is this historical figure?" },
+        { a: "Julius Caesar",          type: "portrait",  prompt: "Who is this historical figure?" },
+        { a: "Napoleon Bonaparte",     type: "portrait",  prompt: "Who is this historical figure?" },
+        { a: "Queen Victoria",         type: "portrait",  prompt: "Who is this historical figure?" },
+        { a: "Winston Churchill",      type: "portrait",  prompt: "Who is this historical figure?" },
+        { a: "Marie Curie",            type: "portrait",  prompt: "Who is this historical figure?" },
+        { a: "George Washington",      type: "portrait",  prompt: "Who is this historical figure?" },
+        { a: "Cleopatra",              type: "portrait",  prompt: "Who is this historical figure?" },
+        { a: "Genghis Khan",           type: "portrait",  prompt: "Who is this historical figure?" },
+        { a: "Martin Luther King Jr.", type: "portrait",  prompt: "Who is this historical figure?" },
+        { a: "Leonardo da Vinci",      type: "portrait",  prompt: "Who is this historical figure?" },
+        { a: "Tutankhamun",            type: "portrait",  prompt: "Who is this historical figure?" },
+        { a: "Jawaharlal Nehru",       type: "portrait",  prompt: "Who is this historical figure?" },
+        { a: "Nelson Mandela",         type: "portrait",  prompt: "Who is this historical figure?" },
+        { a: "Nikola Tesla",           type: "portrait",  prompt: "Who is this historical figure?" },
+        { a: "Charles Darwin",         type: "portrait",  prompt: "Who is this historical figure?" },
+        // Famous Monuments & Structures
+        { a: "Colosseum",              type: "monument",  prompt: "What is this famous structure?" },
+        { a: "Taj Mahal",              type: "monument",  prompt: "What is this famous structure?" },
+        { a: "Great Wall of China",    type: "monument",  prompt: "What is this famous structure?" },
+        { a: "Parthenon",              type: "monument",  prompt: "What is this famous structure?" },
+        { a: "Machu Picchu",           type: "monument",  prompt: "What is this famous structure?" },
+        { a: "Angkor Wat",             type: "monument",  prompt: "What is this famous structure?" },
+        { a: "Stonehenge",             type: "monument",  prompt: "What is this famous structure?" },
+        { a: "Chichen Itza",           type: "monument",  prompt: "What is this famous structure?" },
+        { a: "Petra",                  type: "monument",  prompt: "What is this famous structure?" },
+        { a: "Hagia Sophia",           type: "monument",  prompt: "What is this famous structure?" },
+        { a: "Pantheon",               type: "monument",  prompt: "What is this famous structure?" },
+        { a: "Forbidden City",         type: "monument",  prompt: "What is this famous structure?" },
+        { a: "Great Pyramid of Giza",  type: "monument",  prompt: "What is this famous structure?" },
+        { a: "Notre-Dame Cathedral",   type: "monument",  prompt: "What is this famous structure?" },
+        { a: "Alhambra",               type: "monument",  prompt: "What is this famous structure?" },
+        // Empires & Civilizations
+        { a: "Roman Empire",           type: "empire",    prompt: "Which empire or civilization is depicted?" },
+        { a: "Mongol Empire",          type: "empire",    prompt: "Which empire or civilization is depicted?" },
+        { a: "Ottoman Empire",         type: "empire",    prompt: "Which empire or civilization is depicted?" },
+        { a: "Byzantine Empire",       type: "empire",    prompt: "Which empire or civilization is depicted?" },
+        { a: "Ancient Egypt",          type: "empire",    prompt: "Which empire or civilization is depicted?" },
+        { a: "Mughal Empire",          type: "empire",    prompt: "Which empire or civilization is depicted?" },
+        { a: "Persian Empire",         type: "empire",    prompt: "Which empire or civilization is depicted?" },
+        { a: "British Empire",         type: "empire",    prompt: "Which empire or civilization is depicted?" },
+    ];
 
-        // Curated array for Visual Challenge
-        const visualDB = [
-            { a: "Colosseum", img: "https://upload.wikimedia.org/wikipedia/commons/d/de/Colosseo_2020.jpg", opt: ["Colosseum", "Pantheon", "Circus Maximus", "Roman Forum"] },
-            { a: "Taj Mahal", img: "https://upload.wikimedia.org/wikipedia/commons/b/bd/Taj_Mahal%2C_Agra%2C_India_edit3.jpg", opt: ["Taj Mahal", "Red Fort", "Qutb Minar", "Hawa Mahal"] },
-            { a: "Great Pyramid of Giza", img: "https://upload.wikimedia.org/wikipedia/commons/e/e3/Kheops-Pyramid.jpg", opt: ["Great Pyramid of Giza", "Step Pyramid", "Sphinx", "Luxor Temple"] },
-            { a: "Machu Picchu", img: "https://upload.wikimedia.org/wikipedia/commons/e/eb/Machu_Picchu%2C_Peru.jpg", opt: ["Machu Picchu", "Chichen Itza", "Teotihuacan", "Petra"] },
-            { a: "Abraham Lincoln", img: "https://upload.wikimedia.org/wikipedia/commons/a/ab/Abraham_Lincoln_O-77_matte_collodion_print.jpg", opt: ["Abraham Lincoln", "George Washington", "Andrew Jackson", "Ulysses S. Grant"] },
-            { a: "Joan of Arc", img: "https://upload.wikimedia.org/wikipedia/commons/3/39/Joan_of_arc_miniature_graded.jpg", opt: ["Joan of Arc", "Marie Antoinette", "Queen Elizabeth I", "Catherine the Great"] },
-            { a: "Mahatma Gandhi", img: "https://upload.wikimedia.org/wikipedia/commons/7/7a/Mahatma-Gandhi%2C_studio%2C_1931.jpg", opt: ["Mahatma Gandhi", "Jawaharlal Nehru", "Subhas Chandra Bose", "B.R. Ambedkar"] },
-            { a: "Roman Empire", img: "https://upload.wikimedia.org/wikipedia/commons/0/00/Roman_Empire_Trajan_117AD.png", opt: ["Roman Empire", "Byzantine Empire", "Ottoman Empire", "Holy Roman Empire"] },
-            { a: "Mongol Empire", img: "https://upload.wikimedia.org/wikipedia/commons/e/ea/Mongol_Empire_map.gif", opt: ["Mongol Empire", "Qing Dynasty", "Mughal Empire", "Persian Empire"] },
-            { a: "Julius Caesar", img: "https://upload.wikimedia.org/wikipedia/commons/c/c0/Julius_Caesar_in_Campidoglio.jpg", opt: ["Julius Caesar", "Augustus", "Nero", "Marcus Aurelius"] }
-        ];
+    async function startVisuals() {
+        prepareGameScreen("Loading History's Mysteries...");
+
+        // Helper: fetch Wikipedia thumbnail for a subject name
+        async function fetchWikiThumb(title) {
+            const res = await fetch(`https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=pageimages&pithumbsize=500&format=json&origin=*`);
+            const data = await res.json();
+            const pages = data.query.pages;
+            const page = pages[Object.keys(pages)[0]];
+            return (page && page.thumbnail) ? page.thumbnail.source : null;
+        }
+
+        // Helper: pick N distractors from pool (excluding the correct answer)
+        function pickDistractors(correct, pool, n) {
+            const others = pool.filter(p => p.a !== correct.a);
+            return shuffleArray([...others]).slice(0, n).map(p => p.a);
+        }
 
         try {
-            let pool = shuffleArray([...visualDB]);
+            const shuffledPool = shuffleArray([...VISUAL_POOL]);
             activeDeck = [];
-            for (let i = 0; i < 5; i++) {
-                const target = pool[i];
-                const options = shuffleArray([...target.opt]);
-                
+            let attempts = 0;
+
+            for (let i = 0; i < shuffledPool.length && activeDeck.length < 5; i++) {
+                attempts++;
+                const target = shuffledPool[i];
+                const imgUrl = await fetchWikiThumb(target.a);
+                if (!imgUrl) continue; // skip if Wikipedia had no image
+
+                const distractors = pickDistractors(target, VISUAL_POOL, 3);
+                const choices = shuffleArray([target.a, ...distractors]);
+
                 activeDeck.push({
-                    q: `<div style="font-size:1.2rem; margin-bottom:10px;">Identify this historical subject:</div>
-                        <img src="${target.img}" class="flag-img" alt="Mystery Relic" style="max-height: 220px; object-fit: contain; margin-bottom: 5px;">`,
+                    q: `<div style="font-size:1.1rem; margin-bottom:10px; color:var(--accent); font-weight:bold;">🗿 History's Mysteries</div>
+                        <div style="font-size:1rem; margin-bottom:12px;">${target.prompt}</div>
+                        <img src="${imgUrl}" class="flag-img" alt="Mystery Subject" style="max-height:240px; object-fit:contain; border-radius:10px; box-shadow:0 4px 20px rgba(0,0,0,0.6);">`,
                     a: target.a,
-                    c: options,
-                    isFlagMode: false 
+                    c: choices,
+                    isFlagMode: false
                 });
             }
-            // Add a small artificial delay to match the network loading vibe
+
+            if (activeDeck.length < 3) {
+                abortFetch("Could not load enough visual questions. Check your connection.");
+                return;
+            }
             setTimeout(() => startRound(false), 500);
         } catch(e) {
             abortFetch("Failed to load visual history.");
@@ -769,6 +829,9 @@
                     let searchQuery;
                     if(item.isFlagMode) {
                         searchQuery = `Flag of ${item.a}`;
+                    } else if (!isNaN(item.a) && String(item.a).trim() !== '') {
+                        // Numeric answer — search by the question topic text instead
+                        searchQuery = item.q.replace(/<[^>]*>?/gm, '').replace(/["?]/g, '').trim().substring(0, 80);
                     } else {
                         searchQuery = `${item.a} history facts`;
                     }
@@ -810,6 +873,9 @@
                     let searchQuery;
                     if(item.isFlagMode) {
                         searchQuery = `Flag of ${item.a}`;
+                    } else if (!isNaN(item.a) && String(item.a).trim() !== '') {
+                        // Numeric answer — search by the question topic text instead
+                        searchQuery = item.q.replace(/<[^>]*>?/gm, '').replace(/["?]/g, '').trim().substring(0, 80);
                     } else {
                         searchQuery = `${item.a} history facts`;
                     }
